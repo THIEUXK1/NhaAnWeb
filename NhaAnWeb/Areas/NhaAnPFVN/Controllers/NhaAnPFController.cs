@@ -282,7 +282,30 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
                 return Json(new { count = 0, message = "Đã có lỗi xảy ra", error = ex.Message });
             }
         }
- 
+        [HttpGet("/PF/GetAttLogsByGate")]
+        public IActionResult GetAttLogsByGate(int idgate)
+        {
+            idgate = 3;
+            var gate = _context.GatePfs.FirstOrDefault(g => g.Id == idgate);
+            if (gate == null)
+                return Json(new List<object>()); // Không có cổng
+
+            var logs = _context.AttLogs
+                .Where(a => a.DeviceName == gate.GName)
+                .OrderByDescending(a => a.AuthDateTime)
+                .Select(a => new
+                {
+                    a.EmployeeId,
+                    a.PersonName,
+                    AuthDateTime = a.AuthDateTime.HasValue ? a.AuthDateTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
+                    a.Direction,
+                    a.DeviceName
+                })
+                .ToList();
+
+            return Json(logs);
+        }
+
         #endregion
     }
 }
