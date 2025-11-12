@@ -1,0 +1,113 @@
+﻿@model KhoEST.Areas.NhaAnPFVN.Controllers.NhaAnPFController.User
+@{
+    Layout = "~/Areas/NhaAnPFVN/Views/Shared/_Layout.cshtml";
+}
+
+<body style="margin:0;padding:0;height:100vh;display:flex;justify-content:center;align-items:center;
+             background-image:url('https://xuonggooccho.com/ckfinder/userfiles/files/hinh-anh-nha-bep-dep(1).jpg');
+             background-size:cover;background-position:center;font-family:Arial,sans-serif;">
+
+    <form id="loginForm" method="post"
+          action="@Url.Action("Login2", "NhaAnPF", new { area = "NhaAnPFVN" })"
+          style="background-color:white; padding:30px 40px; border-radius:12px;
+             box-shadow:0 4px 20px rgba(0,0,0,0.1); width:100%; max-width:500px;
+             border:2px solid black;">
+
+        <h2 style="text-align:center;margin-bottom:25px;color:#333;font-size:24px;">Đăng nhập</h2>
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger", style = "color:red;margin-bottom:15px;" })
+
+        <!-- Username -->
+        <div style="margin-bottom:18px;">
+            <label for="username" style="display:block;font-weight:600;margin-bottom:8px;color:#444;">
+                Tên đăng nhập
+            </label>
+            <input type="text" id="username" name="username" required autocomplete="username"
+                   value="@Model?.Username"
+                   style="width:100%;padding:12px;border:1px solid black;border-radius:6px;
+              font-size:14px;outline:none;background-color:#f9f9f9;">
+        </div>
+
+        <!-- Password -->
+        <div style="margin-bottom:18px;">
+            <label for="password" style="display:block;font-weight:600;margin-bottom:8px;color:#444;">
+                Mật khẩu
+            </label>
+            <input type="password" id="password" name="password" required autocomplete="current-password"
+                   value="@Model?.Password"
+                   style="width:100%;padding:12px;border:1px solid black;border-radius:6px;
+              font-size:14px;outline:none;background-color:#f9f9f9;">
+        </div>
+
+        <!-- Remember -->
+        <div style="margin-bottom:20px;display:flex;align-items:center;">
+            <input type="checkbox" id="rememberMe" name="rememberMe" value="true"
+                   style="margin-right:8px;cursor:pointer;">
+            <label for="rememberMe" style="color:#444;cursor:pointer;font-size:14px;">
+                Ghi nhớ đăng nhập
+            </label>
+        </div>
+
+        <!-- Submit -->
+        <div>
+            <input type="submit" value="Đăng nhập"
+                   style="width:100%;background-color:#007bff;color:#fff;padding:12px;
+              border:1px solid black;border-radius:6px;cursor:pointer;font-size:16px;
+              transition:background-color 0.3s;">
+        </div>
+    </form>
+
+    <script>
+        // ===== Cookie =====
+        function setCookie(name, value, days, path = "/NhaAnPFVN") {
+            let expires = "";
+            if (days) {
+                let date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=" + path;
+        }
+
+        function getCookie(name) {
+            let nameEQ = name + "=";
+            let ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+            }
+            return null;
+        }
+
+        function eraseCookie(name, path = "/NhaAnPFVN") {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + path + ";";
+        }
+
+        // Khi load trang: tự điền từ cookie
+        window.onload = function () {
+            let savedUser = getCookie("LoginUsername");
+            let savedPass = getCookie("LoginPassword");
+            if (savedUser) document.getElementById("username").value = savedUser;
+            if (savedPass) {
+                document.getElementById("password").value = savedPass;
+                document.getElementById("rememberMe").checked = true;
+            }
+        };
+
+        // Khi submit: xử lý cookie
+        document.getElementById("loginForm").addEventListener("submit", function () {
+            let remember = document.getElementById("rememberMe").checked;
+            let user = document.getElementById("username").value;
+            let pass = document.getElementById("password").value;
+
+            if (remember) {
+                setCookie("LoginUsername", user, 365 * 100);
+                setCookie("LoginPassword", pass, 365 * 100);
+            } else {
+                setCookie("LoginUsername", user, 365 * 100);
+                eraseCookie("LoginPassword");
+            }
+        });
+    </script>
+</body>
