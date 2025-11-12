@@ -10,153 +10,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quét Mã</title>
+    <title>Quét Mã Nhà Ăn</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
-<body style="font-family: Arial, sans-serif; margin: 20px; padding: 0; background-color: #f0f0f0; position: relative;">
+<body style="font-family:Arial, sans-serif; margin:20px; background-color:#f0f0f0; position:relative; overflow-x:hidden;">
 
     <!-- Tổng suất ăn toàn bộ -->
-    <div id="totalMeals" style="position:absolute; top:0; right:10px; background-color:#fff; padding:10px; border:2px solid #000; border-radius:5px; font-size:30px; color:#e74c3c; font-weight:bold; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+    <div id="totalMeals" style="position:absolute; top:0; right:10px; background:#fff; padding:15px 20px; border:2px solid #000; border-radius:8px; font-size:28px; color:#e74c3c; font-weight:bold; z-index:1000; box-shadow:0 6px 12px rgba(0,0,0,0.25);">
         Tổng suất ăn: 0
     </div>
 
     <!-- Tổng suất ăn tại cổng -->
-    <div id="totalGateMeals" style="position:absolute; top:0; left:10px; background-color:#fff; padding:10px; border:2px solid #000; border-radius:5px; font-size:30px; font-weight:bold; color:red; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+    <div id="totalGateMeals" style="position:absolute; top:0; left:10px; background:#fff; padding:15px 20px; border:2px solid #000; border-radius:8px; font-size:28px; font-weight:bold; color:red; z-index:1000; box-shadow:0 6px 12px rgba(0,0,0,0.25);">
         Tổng suất ăn tại cổng: 0
     </div>
 
     <!-- Tiêu đề -->
-    <div style="display:flex; justify-content:center; width:100%;">
-        <h1 style="font-size:50px; font-weight:bold; color:#333; display:inline-block; background-color:#fff; padding:10px 20px; border-radius:5px; border:2px solid #000; box-shadow:0 4px 6px rgba(0,0,0,0.3); margin:0;">
+    <div style="display:flex; justify-content:center; width:100%; margin-bottom:20px;">
+        <h1 style="font-size:50px; font-weight:bold; color:#333; background:#fff; padding:15px 25px; border-radius:12px; border:2px solid #000; box-shadow:0 6px 12px rgba(0,0,0,0.25); margin:0;">
             🍽️ Quét Mã Nhà Ăn
         </h1>
     </div>
 
     <!-- Chọn cổng -->
-    <div style="position:fixed;top:85px;left:15px;z-index:1000;background:#fff;border:2px solid #000;border-radius:10px;padding:10px 15px;box-shadow:0 4px 8px rgba(0,0,0,0.2);font-size:18px;">
-        <label for="gate" style="font-weight:bold;color:#333;display:block;margin-bottom:5px;">Chọn Cổng</label>
-        <select id="gate" name="gate" style="font-size:18px;border-radius:8px;border:2px solid #000;color:#444;background:#fff;outline:none;height:40px;padding:0 10px;cursor:pointer;width:180px;appearance:none;background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;%3E%3Cpath fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4z&quot; /%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;background-size:10px;">
+    <div style="position:fixed; top:100px; left:15px; z-index:1000; background:#fff; border:2px solid #000; border-radius:12px; padding:12px 16px; box-shadow:0 6px 12px rgba(0,0,0,0.25); font-size:18px;">
+        <label for="gate" style="font-weight:bold; color:#333; display:block; margin-bottom:6px;">Chọn Cổng</label>
+        <select id="gate" name="gate" style="font-size:18px; border-radius:10px; border:2px solid #000; color:#444; background:#fff; outline:none; height:42px; padding:0 12px; cursor:pointer; width:200px; appearance:none; background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 4 5&quot;%3E%3Cpath fill=&quot;%23666&quot; d=&quot;M2 0L0 2h4z&quot; /%3E%3C/svg%3E'); background-repeat:no-repeat; background-position:right 12px center; background-size:12px;">
             <option value="0" disabled selected style="color:#999;">-- Chọn vị trí --</option>
         </select>
     </div>
 
     <!-- Audio -->
-    <audio id="tiengquetvan" src="~/Audio/amThanhOK/daNhanVanTay.mp3" preload="auto"></audio>
-    <audio id="errorSound" src="~/Audio/ok/am-thanh-tra-loi-sai-wav-www.tiengdong.com.wav" preload="auto"></audio>
-    <audio id="doneSound" src="~/Audio/amThanhOK/tieng_ting_mp3-www_tiengdong_com.mp3" preload="auto"></audio>
+    <audio id="newEntrySound" src="~/Audio/amThanhOK/NhanDien.mp3" preload="auto"></audio>
 
-    <!-- Bảng AttLogs -->
-   <form id="attLogsForm" style="position:relative; top:150px; border-radius:5px; box-shadow:0 4px 6px rgba(0,0,0,0.3); padding:20px; font-size:18px; display:block; background-color:#fff; margin-bottom:20px; border:2px solid #000;">
-    <div style="max-height:400px; overflow-y:auto;">
-        <table id="attLogsTable" style="width:100%; border-collapse: collapse;">
-            <thead>
-                <tr style="background:#f0f0f0;">
-                    <th style="border:1px solid #000; padding:5px;">Mã NV</th>
-                    <th style="border:1px solid #000; padding:5px;">Họ tên</th>
-                    <th style="border:1px solid #000; padding:5px;">Thời gian</th>
-                    <th style="border:1px solid #000; padding:5px;">Hướng quét</th>
-                    <th style="border:1px solid #000; padding:5px;">Máy Quét</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</form>
+    <!-- Form bao quanh danh sách log -->
+    <form id="attLogsForm" style="position:relative; top:90px; border-radius:12px; box-shadow:0 6px 12px rgba(0,0,0,0.25); padding:20px; font-size:18px; background:#fff; margin-bottom:30px; border:2px solid #000;">
 
+        <!-- Thống kê số lượt quét và số người thực tế -->
+        <div id="logStats" style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:18px; font-weight:bold;">
+            <div id="recordCount" style="color:#e74c3c;">Số lượt quét: 0</div>
+            <div id="uniqueCount" style="color:#27ae60;">Số người thực tế: 0</div>
+        </div>
 
-    <!-- Loading -->
-    <div id="loading" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 9999; background-color: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px; color: white; font-family: Arial, sans-serif; box-shadow: 0px 4px 10px rgba(0,0,0,0.5);">
-        <div style="width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid white; border-radius: 50%; margin: 0 auto 10px; animation: spin 1s linear infinite;"></div>
-        <p id="loading-text" style="font-size: 16px; font-weight: bold; margin-top: 10px;"></p>
-    </div>
+        <!-- Container danh sách log -->
+        <div id="attLogsContainer" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; max-height:600px; overflow-y:auto;">
+            <p style="text-align:center; width:100%; font-weight:bold; color:#555;">Chưa có dữ liệu</p>
+        </div>
 
-    <!-- Message -->
-    <div id="message" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: #fff; color: red; border-radius: 10px; max-width: 80%; text-align: center; z-index: 1000; display: none; border: 2px solid red; font-size: 36px; font-weight: bold;">
-        <p id="message-text"></p>
-        <button id="error-close-btn" onclick="closeMessage()" style="background-color: green; color: white; border: 2px solid green; padding: 10px 20px; margin-top: 10px; cursor: pointer; border-radius: 5px; font-size: 18px;">Đóng</button>
-    </div>
+    </form>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const gateSelect = document.getElementById("gate");
+    const container = document.getElementById("attLogsContainer");
+    const totalGateMeals = document.getElementById("totalGateMeals");
+    const totalMeals = document.getElementById("totalMeals");
+    const newEntrySound = document.getElementById("newEntrySound");
 
-    // Tải danh sách cổng
-    fetch("/PF/Gate")
-        .then(res => res.json())
-        .then(data => {
-            data.forEach(gate => {
-                const opt = document.createElement("option");
-                opt.value = gate.id;
-                opt.textContent = gate.gName;
-                gateSelect.appendChild(opt);
-            });
-
-            const savedGate = localStorage.getItem("selectedGate");
-            if(savedGate) {
-                gateSelect.value = savedGate;
-                triggerGateChange();
-            }
+    // Load danh sách cổng
+    fetch("/PF/Gate").then(res => res.json()).then(data => {
+        data.forEach(gate => {
+            const opt = document.createElement("option");
+            opt.value = gate.id;
+            opt.textContent = gate.gName;
+            gateSelect.appendChild(opt);
         });
+        const savedGate = localStorage.getItem("selectedGate");
+        if(savedGate) { 
+            gateSelect.value = savedGate; 
+            triggerGateChange(); 
+        }
+    });
 
-    // Khi chọn cổng
     gateSelect.addEventListener("change", triggerGateChange);
 
-    function triggerGateChange() {
-        const selectedGateId = gateSelect.value;
-        localStorage.setItem("selectedGate", selectedGateId);
-
-        // Cập nhật tổng suất ăn tại cổng
-        fetch(`/PF/GetMealCountByGate?idgate=${selectedGateId}`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("totalGateMeals").textContent = `Tổng suất ăn tại cổng: ${data.count || 0}`;
-            });
-
-        // Cập nhật bảng AttLogs
-        fetch(`/PF/GetAttLogsByGate?idgate=${selectedGateId}`)
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.querySelector("#attLogsTable tbody");
-                tbody.innerHTML = "";
-                if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Không có dữ liệu</td></tr>`;
-                    return;
-                }
-data.forEach((log, index) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td>${log.employeeId || "--"}</td>
-        <td>${log.personName || "--"}</td>
-        <td>${log.authDateTime || "--"}</td>
-        <td>${log.direction || "--"}</td>
-        <td>${log.deviceName || "--"}</td>
-    `;
-    tbody.appendChild(row);
-});
-            });
-
-        // Thay đổi background theo cổng
-        const body = document.body;
-        if(selectedGateId === "1") body.style.background = "linear-gradient(to bottom right, #ffcccc, #ffb3b3)";
-        else if(selectedGateId === "2") body.style.background = "linear-gradient(to bottom right, #ffecb3, #ffdb99)";
-        else if(selectedGateId === "3") body.style.background = "linear-gradient(to bottom right, #ffffb3, #f2f2b3)";
-        else if(selectedGateId === "4") body.style.background = "linear-gradient(to bottom right, #b3ffb3, #99ff99)";
-        else body.style.background = "#f0f0f0";
+    function triggerGateChange(){
+        const gateId = gateSelect.value;
+        if(!gateId) return;
+        localStorage.setItem("selectedGate", gateId);
+        updateGateMeals(gateId);
+        loadAttLogs(gateId);
+        updateBackground(gateId);
     }
 
-    // Tải tổng suất ăn toàn bộ
-    fetch("/PF/TotalMeals")
+    function updateGateMeals(gateId){
+        fetch(`/PF/GetMealCountByGate?idgate=${gateId}`)
+            .then(res => res.json())
+            .then(data => { totalGateMeals.textContent = `Tổng suất ăn tại cổng: ${data.count || 0}`; });
+    }
+
+let lastRecordCount = 0; // lưu số lượt quét trước đó
+
+function loadAttLogs(gateId){
+    fetch(`/PF/GetAttLogsByGate?idgate=${gateId}`)
         .then(res => res.json())
         .then(data => {
-            document.getElementById("totalMeals").textContent = `Tổng suất ăn: ${data || 0}`;
-        });
+            container.innerHTML = "";
+            const recordCountDiv = document.getElementById("recordCount");
+            const uniqueCountDiv = document.getElementById("uniqueCount");
+
+            if(!data.length){
+                container.innerHTML = `<p style='text-align:center; width:100%; font-weight:bold; color:#555;'>Không có dữ liệu</p>`;
+                recordCountDiv.textContent = "Số lượt quét: 0";
+                uniqueCountDiv.textContent = "Số người thực tế: 0";
+                lastRecordCount = 0;
+                lastUniqueCount = 0;
+                return;
+            }
+
+            // Số lượt quét
+            const recordCount = data.length;
+            recordCountDiv.textContent = `Số lượt quét: ${recordCount}`;
+
+            // Số người thực tế
+            const uniqueEmployees = [...new Set(data.map(log => log.employeeId))];
+            const uniqueCount = uniqueEmployees.length;
+            uniqueCountDiv.textContent = `Số người thực tế: ${uniqueCount}`;
+
+  // Tạo object để đếm số lần xuất hiện của mỗi employeeId
+const counts = {};
+data.forEach(log => {
+    counts[log.employeeId] = (counts[log.employeeId] || 0) + 1;
 });
 
-function closeMessage(){
-    document.getElementById("message").style.display = "none";
-}
-</script>
+data.forEach(log => {
+    const card = document.createElement("div");
 
+    // Lấy số lần xuất hiện
+    const times = counts[log.employeeId];
+
+    // Chọn màu nền dựa trên số lần xuất hiện
+    let bgColor = "#b3ffb3"; // mặc định xanh lá
+    if(times === 1) bgColor = "#b3ffb3";      // 1 lần -> xanh lá
+    else if(times === 2) bgColor = "#ffff99"; // 2 lần -> vàng
+    else if(times === 3) bgColor = "#ffb366"; // 3 lần -> cam
+    else if(times >= 4) bgColor = "#ff6666";  // 4 lần trở lên -> đỏ
+
+    card.style = `
+        background: ${bgColor};
+        border:2px solid #000; 
+        border-radius:12px; 
+        padding:15px; 
+        box-shadow:0 4px 8px rgba(0,0,0,0.2); 
+        font-size:16px; 
+        transition:transform 0.2s, box-shadow 0.2s;
+    `;
+    card.onmouseover = () => {
+        card.style.transform = 'scale(1.05)';
+        card.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+    };
+    card.onmouseout = () => {
+        card.style.transform = 'scale(1)';
+        card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+    };
+
+    card.innerHTML = `
+        <p style='margin:6px 0; font-size:15px;'><strong>Mã NV:</strong> ${log.employeeId || "--"}</p>
+        <p style='margin:6px 0; font-size:15px;'><strong>Họ tên:</strong> ${log.personName || "--"}</p>
+        <p style='margin:6px 0; font-size:15px;'><strong>Thời gian:</strong> ${log.authDateTime || "--"}</p>
+        <p style='margin:6px 0; font-size:15px;'><strong>Hướng quét:</strong> ${log.direction || "--"}</p>
+        <p style='margin:6px 0; font-size:15px;'><strong>Máy quét:</strong> ${log.deviceName || "--"}</p>
+    `;
+    container.appendChild(card);
+});
+
+
+
+            // Phát âm thanh nếu số lượt quét tăng
+            if(recordCount > lastRecordCount){
+                newEntrySound.pause();
+                newEntrySound.currentTime = 0;
+                newEntrySound.play().catch(err => console.log(err));
+            }
+
+            lastRecordCount = recordCount;
+            lastUniqueCount = uniqueCount;
+        });
+}
+
+
+    function updateBackground(gateId){
+        const body = document.body;
+        if(gateId==="1") body.style.background="linear-gradient(to bottom right, #ffcccc, #ffb3b3)";
+        else if(gateId==="2") body.style.background="linear-gradient(to bottom right, #ffecb3, #ffdb99)";
+        else if(gateId==="3") body.style.background="linear-gradient(to bottom right, #ffffb3, #f2f2b3)";
+        else if(gateId==="4") body.style.background="linear-gradient(to bottom right, #b3ffb3, #99ff99)";
+        else body.style.background="#f0f0f0";
+    }
+
+    // Tổng suất ăn toàn bộ
+    fetch("/PF/TotalMeals").then(res => res.json()).then(data => { totalMeals.textContent=`Tổng suất ăn: ${data || 0}`; });
+
+    // Polling liên tục mỗi 2 giây
+    setInterval(() => {
+        const gateId = gateSelect.value;
+        if(gateId) loadAttLogs(gateId);
+    }, 2000);
+});
+</script>
 </body>
 </html>

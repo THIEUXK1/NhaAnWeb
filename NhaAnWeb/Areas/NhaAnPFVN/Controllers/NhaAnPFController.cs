@@ -285,7 +285,6 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
         [HttpGet("/PF/GetAttLogsByGate")]
         public IActionResult GetAttLogsByGate(int idgate)
         {
-            idgate = 3;
             var gate = _context.GatePfs.FirstOrDefault(g => g.Id == idgate);
             if (gate == null)
                 return Json(new List<object>()); // Không có cổng
