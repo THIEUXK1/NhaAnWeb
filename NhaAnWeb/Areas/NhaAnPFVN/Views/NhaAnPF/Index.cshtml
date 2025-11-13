@@ -46,31 +46,169 @@
         <div id="currentMeal" style="margin-top:10px; font-weight:700; color:#222222;">Ca hiện tại: --</div>
     </div>
 
-    <!-- Audio -->
-    <audio id="newEntrySound" src="~/Audio/amThanhOK/NhanDien.mp3" preload="auto"></audio>
+<!-- Chú thích số lượt quét -->
+<div id="scanLegend" style="display:flex; gap:12px; justify-content:center; margin-top:20px; margin-bottom:12px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:4px;">
+        <div style="width:20px; height:20px; background:#b3ffb3; border:1px solid #000;"></div>
+        <span>1 lần</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px;">
+        <div style="width:20px; height:20px; background:#ffff99; border:1px solid #000;"></div>
+        <span>2 lần</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px;">
+        <div style="width:20px; height:20px; background:#ffb366; border:1px solid #000;"></div>
+        <span>3 lần</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px;">
+        <div style="width:20px; height:20px; background:#ff6666; border:1px solid #000;"></div>
+        <span>4 lần trở lên</span>
+    </div>
+</div>
 
     <!-- Form bao quanh danh sách log -->
-    <form id="attLogsForm"
-          style="position:relative; top:90px; margin:0 auto; max-width:1200px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); padding:22px; font-size:16px; background:#ffffff; margin-bottom:30px; border:2px solid #000000;">
+ <!-- Form bao quanh danh sách log -->
+<form id="attLogsForm"
+      style="position:relative; top:70px; margin:0 auto; max-height:1000px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); padding:22px; font-size:16px; background:#ffffff; margin-bottom:20px; border:2px solid #000000;">
 
-        <!-- Thống kê số lượt quét và số người thực tế -->
-        <div id="logStats" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
-            <div id="recordCount" style="color:#e74c3c; font-weight:800; font-size:18px;">Số lượt quét: 0</div>
-            <div id="uniqueCount" style="color:#27ae60; font-weight:800; font-size:18px;">Số người thực tế: 0</div>
-            <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-                <button type="button" id="refreshBtn" style="cursor:pointer; border:2px solid #000; background:#ffffff; padding:8px 12px; border-radius:10px; font-weight:700;">Refresh</button>
-                <button type="button" id="exportBtn" style="cursor:pointer; border:2px solid #000; background:#ffffff; padding:8px 12px; border-radius:10px; font-weight:700;">Export Excel</button>
-            </div>
+    <!-- Thống kê số lượt quét và số người thực tế -->
+    <div id="logStats" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+        <div id="recordCount" style="color:#e74c3c; font-weight:800; font-size:18px;">Số lượt quét: 0</div>
+        <div id="uniqueCount" style="color:#27ae60; font-weight:800; font-size:18px;">Số người thực tế: 0</div>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+            <button type="button" id="refreshBtn" style="cursor:pointer; border:2px solid #000; background:#ffffff; padding:8px 12px; border-radius:10px; font-weight:700;">Refresh</button>
+            <button type="button" id="exportBtn" style="cursor:pointer; border:2px solid #000; background:#ffffff; padding:8px 12px; border-radius:10px; font-weight:700;">Export Excel</button>
         </div>
+    </div>
 
-        <!-- Container danh sách log -->
-        <div id="attLogsContainer"
-             style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; max-height:620px; overflow-y:auto; padding:6px;">
-            <p style="text-align:center; width:100%; font-weight:700; color:#666666;">Chưa có dữ liệu</p>
-        </div>
+    <!-- Container danh sách log -->
+    <div id="attLogsContainer"
+         style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; max-height:620px; overflow-y:auto; padding:6px;">
+        <p style="text-align:center; width:100%; font-weight:700; color:#666666;">Chưa có dữ liệu</p>
+    </div>
 
-    </form>
+</form>
 
+<!-- Toggle button + container các nút -->
+<div style="text-align:center; margin-top:120px;">
+    <button class="toggle-button" onclick="toggleButtons()" 
+            style="margin-bottom:10px; cursor:pointer; background: linear-gradient(90deg, #007BFF, #00C6FF); color:white; padding:10px 20px; border:2px solid #000; border-radius:8px; font-size:16px; box-shadow:0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s;">
+        ▼ Hiển thị tùy chọn
+    </button>
+
+    <div class="button-container" id="buttonContainer" 
+         style="display:none; margin-top:10px; padding:15px; border:2px solid #000; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.15); background: linear-gradient(135deg, #fef9f9, #f0f0f0);">
+        <form method="post" action="/Best/XuatEXThang">
+            <input type="month" name="selectedMonth" required 
+                   style="border:2px solid #000; border-radius:5px; padding:8px; margin-bottom:5px;" />
+            <button type="submit" 
+                    style="border-radius:6px; border:2px solid #000; background:#28a745; color:white; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+                Báo cáo tổng quát tháng
+            </button>
+        </form>
+        <button onclick="redirectToPage1()" 
+                style="border-radius:6px; border:2px solid #000; background:#ffc107; color:#000; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+            Black list
+        </button>
+        <button onclick="window.location.href='/NhaAnPFVN/NhaAnPF/KhachAn'" 
+                style="border-radius:6px; border:2px solid #000; background:#17a2b8; color:white; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+            Thêm Khách ăn
+        </button>
+        <button onclick="showDateForm()" 
+                style="border-radius:6px; border:2px solid #000; background:#6f42c1; color:white; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+            Báo cáo ngày hôm nay
+        </button>
+        <button onclick="redirectToCheckAnh()" 
+                style="border-radius:6px; border:2px solid #000; background:#fd7e14; color:white; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+            Check suất ăn chi tiết
+        </button>
+        <button onclick="redirectToCheckQT()" 
+                style="border-radius:6px; border:2px solid #000; background:#dc3545; color:white; padding:8px 16px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-bottom:5px;">
+            Check quên thẻ
+        </button>
+    </div>
+
+<!-- Form chọn ngày -->
+<div id="dateForm" style="display:none; border-radius:8px; border:2px solid #000; box-shadow:0 4px 6px rgba(0,0,0,0.3); padding:10px; background:#f8f9fa; margin-top:10px;">
+    <label for="startDate">Ngày bắt đầu:</label>
+    <input type="date" id="startDate" style="border:2px solid #000; border-radius:5px; padding:5px; margin-right:5px;" />
+
+    <label for="endDate">Ngày kết thúc:</label>
+    <input type="date" id="endDate" style="border:2px solid #000; border-radius:5px; padding:5px; margin-right:5px;" />
+
+    <button onclick="submitDates()" style="border-radius:6px; border:2px solid #000; background:#20c997; color:white; padding:5px 12px; box-shadow:0 3px 5px rgba(0,0,0,0.3); margin-top:5px;">
+        Xác nhận
+    </button>
+</div>
+
+<script>
+// Hiển thị / ẩn form ngày
+function showDateForm() {
+    const form = document.getElementById("dateForm");
+    form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+}
+
+// Gửi dữ liệu ngày tới server và tải file Excel
+function submitDates() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+
+    // Kiểm tra dữ liệu
+    if (!start || !end) {
+        alert("Vui lòng chọn cả ngày bắt đầu và kết thúc!");
+        return;
+    }
+
+    if (start > end) {
+        alert("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc!");
+        return;
+    }
+
+    // URL endpoint server (phù hợp với route controller)
+    const url = `/PF/ExportAttLogsToExcel?start=${start}&end=${end}`;
+
+    // Tải file Excel từ server
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error("Có lỗi xảy ra khi xuất dữ liệu!");
+            return response.blob();
+        })
+        .then(blob => {
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = `AttLogs_${start}_to_${end}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Xuất dữ liệu thất bại!");
+        });
+}
+</script>
+
+
+</div>
+
+<!-- Script bật/tắt hiển thị -->
+<script>
+function toggleButtons() {
+    const container = document.getElementById("buttonContainer");
+    const btn = document.querySelector(".toggle-button");
+    if (container.style.display === "none") {
+        container.style.display = "block";
+        btn.innerHTML = "▲ Ẩn tùy chọn";
+    } else {
+        container.style.display = "none";
+        btn.innerHTML = "▼ Hiển thị tùy chọn";
+    }
+}
+</script>
+
+    
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const gateSelect = document.getElementById("gate");
@@ -163,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Ca (tính theo phút của ngày)
         const minutes = (hh, mm) => hh*60 + mm;
-        if (t >= minutes(5,0) && t < minutes(9,0)) return {name:"Sáng", start:"05:00", end:"09:00"};
+        if (t >= minutes(5,0) && t < minutes(8,0)) return {name:"Sáng", start:"05:00", end:"08:00"};
         if (t >= minutes(11,0) && t < minutes(13,0)) return {name:"Trưa", start:"11:00", end:"13:00"};
         if (t >= minutes(16,30) && t < minutes(19,0)) return {name:"Tối", start:"16:30", end:"19:00"};
         // Đêm: 23:30 - 01:00 (qua ngày)

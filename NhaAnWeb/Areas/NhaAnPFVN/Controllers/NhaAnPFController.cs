@@ -12,6 +12,8 @@ using System.IO.Compression;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using NhaAnWeb.Context;
+using ClosedXML.Excel;
+using System.IO;
 namespace KhoEST.Areas.NhaAnPFVN.Controllers
 {
     [Area("NhaAnPFVN")]
@@ -227,10 +229,10 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
                 int mealCount = 0;
 
                 // Bữa sáng: 05:00 - 08:00
-                if (now.TimeOfDay >= new TimeSpan(5, 0, 0) && now.TimeOfDay < new TimeSpan(9, 0, 0))
+                if (now.TimeOfDay >= new TimeSpan(5, 0, 0) && now.TimeOfDay < new TimeSpan(8, 0, 0))
                 {
                     startTime = new TimeSpan(5, 0, 0);
-                    endTime = new TimeSpan(9, 0, 0);
+                    endTime = new TimeSpan(8, 0, 0);
 
                     mealCount = _context.AttLogs.Count(tr =>
                         tr.DeviceName == selectedGate.GName &&
@@ -332,11 +334,11 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
                 DateTime endDate = today;
 
                 // Xác định ca ăn hiện tại
-                if (currentTime >= new TimeSpan(5, 0, 0) && currentTime < new TimeSpan(9, 0, 0))
+                if (currentTime >= new TimeSpan(5, 0, 0) && currentTime < new TimeSpan(8, 0, 0))
                 {
                     mealName = "Sáng";
                     startTime = new TimeSpan(5, 0, 0);
-                    endTime = new TimeSpan(9, 0, 0);
+                    endTime = new TimeSpan(8, 0, 0);
                 }
                 else if (currentTime >= new TimeSpan(11, 0, 0) && currentTime < new TimeSpan(13, 0, 0))
                 {
@@ -420,6 +422,77 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
             }
         }
 
+        [HttpGet("/PF/ExportAttLogsToExcel")]
+        public IActionResult ExportAttLogsToExcel(DateTime start, DateTime end)
+        {
+            var authenticatedUser = HttpContext.Session.GetString("NhaAnPF");
+            if (authenticatedUser == null)
+                return Json(new { message = "Chưa đăng nhập" });
+
+            // Tính khoảng thời gian: từ 01:00 ngày bắt đầu -> 01:00 ngày sau ngày kết thúc
+            DateTime startDateTime = start.Date.AddHours(1);
+            DateTime endDateTime = end.Date.AddDays(1).AddHours(1);
+
+            // Lấy dữ liệu
+            var logs = _context.AttLogs
+                .Where(a => a.AuthDateTime.HasValue &&
+                            a.AuthDateTime.Value >= startDateTime &&
+                            a.AuthDateTime.Value < endDateTime)
+                .OrderBy(a => a.AuthDateTime)
+                .ToList();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var ws = workbook.Worksheets.Add("AttLogs");
+
+                // Header
+                ws.Cell(1, 1).Value = "EmployeeId";
+                ws.Cell(1, 2).Value = "PersonName";
+                ws.Cell(1, 3).Value = "AuthDateTime";
+                ws.Cell(1, 4).Value = "Direction";
+                ws.Cell(1, 5).Value = "DeviceName";
+                ws.Cell(1, 6).Value = "Meal";
+
+                int row = 2;
+                foreach (var log in logs)
+                {
+                    var time = log.AuthDateTime.Value.TimeOfDay;
+                    string meal;
+
+                    // Xác định ca ăn theo giờ, ngoài giờ là "0"
+                    if (time >= new TimeSpan(5, 0, 0) && time < new TimeSpan(8, 0, 0))
+                        meal = "Sáng";
+                    else if (time >= new TimeSpan(11, 0, 0) && time < new TimeSpan(13, 0, 0))
+                        meal = "Trưa";
+                    else if (time >= new TimeSpan(16, 30, 0) && time < new TimeSpan(19, 0, 0))
+                        meal = "Tối";
+                    else if (time >= new TimeSpan(23, 30, 0) || time < new TimeSpan(1, 0, 0))
+                        meal = "Đêm";
+                    else
+                        meal = "0"; // Ngoài giờ
+
+                    ws.Cell(row, 1).Value = log.EmployeeId;
+                    ws.Cell(row, 2).Value = log.PersonName;
+                    ws.Cell(row, 3).Value = log.AuthDateTime?.ToString("yyyy-MM-dd HH:mm:ss");
+                    ws.Cell(row, 4).Value = log.Direction;
+                    ws.Cell(row, 5).Value = log.DeviceName;
+                    ws.Cell(row, 6).Value = meal;
+
+                    row++;
+                }
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    stream.Position = 0;
+                    string fileName = $"AttLogs_{start:yyyyMMdd}_to_{end:yyyyMMdd}.xlsx";
+
+                    return File(stream.ToArray(),
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                fileName);
+                }
+            }
+        }
 
         #endregion
     }
