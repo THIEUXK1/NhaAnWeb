@@ -176,29 +176,30 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
         public JsonResult TotalMeals()
         {
             var authenticatedUser = HttpContext.Session.GetString("NhaAnPF");
-
             if (authenticatedUser == null)
-            {
-                // User is not authenticated, redirect to login
                 return Json(new { error = "Not authenticated" });
-            }
-            else
+
+            try
             {
-                // Assume you have a method to get the total number of meals from the database
-                int totalMeals = GetTotalMealsFromDatabase();
-                return Json(totalMeals);
+                DateTime today = DateTime.Today;
+                DateTime start = today; // 00:00 hôm nay
+                DateTime end = today.AddDays(1); // 00:00 hôm sau
+
+                int totalMeals = _context.AttLogs
+                    .Where(a => a.AuthDateTime.HasValue && a.AuthDateTime.Value >= start && a.AuthDateTime.Value < end)
+                    .Distinct()
+                    .Count();
+
+                return Json(new { totalMeals, date = today.ToString("yyyy-MM-dd") });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { totalMeals = 0, message = "Đã có lỗi xảy ra", error = ex.Message });
             }
         }
-        private int GetTotalMealsFromDatabase()
-        {
-            DateTime today = DateTime.Today;
 
-            // Query using LINQ to EF Core
-            int todayRecordCount = _context.AttLogs
-                .Count();
 
-            return todayRecordCount;
-        }
+
 
 
         [HttpGet("/PF/GetMealCountByGate")]
