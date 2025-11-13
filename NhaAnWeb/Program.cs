@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -6,23 +6,23 @@ using System;
 var builder = WebApplication.CreateBuilder(args);
 
 // ----------------------------
-// Th��m d?ch v? v��o container
+// Thêm dịch vụ vào container
 // ----------------------------
 builder.Services.AddControllersWithViews();
 
-// Th��m c?u h��nh Session tr??c khi build app
-builder.Services.AddDistributedMemoryCache(); // B?t bu?c cho session l?u trong b? nh?
+// Thêm cấu hình Session trước khi build app
+builder.Services.AddDistributedMemoryCache(); // Bắt buộc cho session lưu trong bộ nhớ
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromHours(3); // Session t?n t?i t?i ?a 3 gi?
-    options.Cookie.HttpOnly = true; // B?o m?t h?n
-    options.Cookie.IsEssential = true; // C?n thi?t cho ch?c n?ng c? b?n
+    options.IdleTimeout = TimeSpan.FromHours(3); // Session tồn tại tối đa 3 giờ
+    options.Cookie.HttpOnly = true; // Bảo mật hơn
+    options.Cookie.IsEssential = true; // Cần thiết cho chức năng cơ bản
 });
 
 var app = builder.Build();
 
 // ----------------------------
-// C?u h��nh pipeline HTTP
+// Cấu hình pipeline HTTP
 // ----------------------------
 if (!app.Environment.IsDevelopment())
 {
@@ -31,24 +31,35 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // N?u b?n c�� file t?nh (wwwroot)
+app.UseStaticFiles();
 
 app.UseRouting();
 
-// Th��m middleware Session tr??c Authorization
+// Thêm middleware Session trước Authorization
 app.UseSession();
+
+// Middleware redirect trang gốc "/" sang Login
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/")
+    {
+        context.Response.Redirect("/NhaAnPFVN/NhaAnPF/Login");
+        return;
+    }
+    await next();
+});
 
 app.UseAuthorization();
 
 // ----------------------------
-// C?u h��nh route cho Area
+// Cấu hình route cho Area
 // ----------------------------
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
 
-// Route m?c ??nh n?u kh?ng c�� area
+// Route mặc định nếu không có area
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}"
