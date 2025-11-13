@@ -197,7 +197,7 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
 
             return todayRecordCount;
         }
-    
+
 
         [HttpGet("/PF/GetMealCountByGate")]
         public IActionResult GetMealCountByGate(int idgate)
@@ -209,6 +209,7 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
                 {
                     return RedirectToAction("Login", "NhaAnPF");
                 }
+
                 // Kiểm tra cổng hợp lệ
                 var selectedGate = _context.GatePfs.FirstOrDefault(g => g.Id == idgate);
                 if (selectedGate == null)
@@ -216,94 +217,209 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
                     return Json(new { count = 0, message = "Cổng không hợp lệ" });
                 }
 
-                // Lấy ngày hôm nay và thời gian hiện tại
+                // Lấy ngày hiện tại
                 var today = DateTime.Today;
                 var now = DateTime.Now;
 
-                // Xác định khoảng thời gian bữa ăn dựa trên thời gian hiện tại
+                // Biến thời gian và số lượng suất ăn
                 TimeSpan startTime = TimeSpan.Zero;
                 TimeSpan endTime = TimeSpan.Zero;
                 int mealCount = 0;
 
-                if (now.Hour >= 6 && now.Hour < 9) // Bữa sáng
+                // Bữa sáng: 05:00 - 08:00
+                if (now.TimeOfDay >= new TimeSpan(5, 0, 0) && now.TimeOfDay < new TimeSpan(9, 0, 0))
                 {
-                    startTime = new TimeSpan(6, 0, 0);
+                    startTime = new TimeSpan(5, 0, 0);
                     endTime = new TimeSpan(9, 0, 0);
+
                     mealCount = _context.AttLogs.Count(tr =>
                         tr.DeviceName == selectedGate.GName &&
-                        tr.AuthDateTime == today.Date &&
+                        tr.AuthDateTime.HasValue &&
+                        tr.AuthDateTime.Value.Date == today &&
                         tr.AuthDateTime.Value.TimeOfDay >= startTime &&
                         tr.AuthDateTime.Value.TimeOfDay <= endTime);
                 }
-                else if (now.Hour >= 11 && now.Hour < 14) // Bữa trưa
+                // Bữa trưa: 11:00 - 13:00
+                else if (now.TimeOfDay >= new TimeSpan(11, 0, 0) && now.TimeOfDay < new TimeSpan(13, 0, 0))
                 {
                     startTime = new TimeSpan(11, 0, 0);
-                    endTime = new TimeSpan(14, 0, 0);
-                    mealCount = _context.AttLogs.Count(tr =>
-                         tr.DeviceName == selectedGate.GName &&
-                         tr.AuthDateTime == today.Date &&
-                         tr.AuthDateTime.Value.TimeOfDay >= startTime &&
-                         tr.AuthDateTime.Value.TimeOfDay <= endTime);
-                }
-                else if (now.Hour >= 17 && now.Hour < 20) // Bữa tối
-                {
-                    startTime = new TimeSpan(17, 0, 0);
-                    endTime = new TimeSpan(20, 0, 0);
-                    mealCount = _context.AttLogs.Count(tr =>
-                        tr.DeviceName == selectedGate.GName &&
-                        tr.AuthDateTime == today.Date &&
-                        tr.AuthDateTime.Value.TimeOfDay >= startTime &&
-                        tr.AuthDateTime.Value.TimeOfDay <= endTime);
-                }
-                else if (now.Hour >= 23 || now.Hour < 2) // Bữa đêm (23:00 - 01:30)
-                {
-                    startTime = new TimeSpan(23, 0, 0);
-                    endTime = new TimeSpan(1, 30, 0);
-
-                    // Ngày hôm trước và hôm nay
-                    var previousDay = today.AddDays(-1);
+                    endTime = new TimeSpan(13, 0, 0);
 
                     mealCount = _context.AttLogs.Count(tr =>
                         tr.DeviceName == selectedGate.GName &&
-                        tr.AuthDateTime == today.Date &&
+                        tr.AuthDateTime.HasValue &&
+                        tr.AuthDateTime.Value.Date == today &&
                         tr.AuthDateTime.Value.TimeOfDay >= startTime &&
                         tr.AuthDateTime.Value.TimeOfDay <= endTime);
+                }
+                // Bữa tối: 16:30 - 19:00
+                else if (now.TimeOfDay >= new TimeSpan(16, 30, 0) && now.TimeOfDay < new TimeSpan(19, 0, 0))
+                {
+                    startTime = new TimeSpan(16, 30, 0);
+                    endTime = new TimeSpan(19, 0, 0);
+
+                    mealCount = _context.AttLogs.Count(tr =>
+                        tr.DeviceName == selectedGate.GName &&
+                        tr.AuthDateTime.HasValue &&
+                        tr.AuthDateTime.Value.Date == today &&
+                        tr.AuthDateTime.Value.TimeOfDay >= startTime &&
+                        tr.AuthDateTime.Value.TimeOfDay <= endTime);
+                }
+                // Bữa đêm: 23:30 - 01:00 (qua ngày mới)
+                else if (now.TimeOfDay >= new TimeSpan(23, 30, 0) || now.TimeOfDay < new TimeSpan(1, 0, 0))
+                {
+                    startTime = new TimeSpan(23, 30, 0);
+                    endTime = new TimeSpan(1, 0, 0);
+
+                    DateTime startDate = now.TimeOfDay >= new TimeSpan(23, 30, 0) ? today : today.AddDays(-1);
+                    DateTime endDate = startDate.AddDays(1);
+
+                    mealCount = _context.AttLogs.Count(tr =>
+                        tr.DeviceName == selectedGate.GName &&
+                        tr.AuthDateTime.HasValue &&
+                        (
+                            // Trường hợp trong cùng ngày (23:30 - 23:59)
+                            (tr.AuthDateTime.Value.Date == startDate && tr.AuthDateTime.Value.TimeOfDay >= startTime) ||
+                            // Trường hợp sang ngày hôm sau (00:00 - 01:00)
+                            (tr.AuthDateTime.Value.Date == endDate && tr.AuthDateTime.Value.TimeOfDay <= endTime)
+                        ));
                 }
                 else
                 {
                     return Json(new { count = 0, message = "Không phải giờ ăn" });
                 }
 
-                return Json(new { count = mealCount, mealTime = $"{startTime} - {endTime}" });
+                return Json(new
+                {
+                    count = mealCount,
+                    mealTime = $"{startTime:hh\\:mm} - {endTime:hh\\:mm}"
+                });
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi (ví dụ: ghi log lỗi)
                 return Json(new { count = 0, message = "Đã có lỗi xảy ra", error = ex.Message });
             }
         }
+
         [HttpGet("/PF/GetAttLogsByGate")]
         public IActionResult GetAttLogsByGate(int idgate)
         {
-            var gate = _context.GatePfs.FirstOrDefault(g => g.Id == idgate);
-            if (gate == null)
-                return Json(new List<object>()); // Không có cổng
-
-            var logs = _context.AttLogs
-                .Where(a => a.DeviceName == gate.GName)
-                .OrderByDescending(a => a.AuthDateTime)
-                .Select(a => new
+            try
+            {
+                // Kiểm tra đăng nhập
+                var authenticatedUser = HttpContext.Session.GetString("NhaAnPF");
+                if (authenticatedUser == null)
                 {
-                    a.EmployeeId,
-                    a.PersonName,
-                    AuthDateTime = a.AuthDateTime.HasValue ? a.AuthDateTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
-                    a.Direction,
-                    a.DeviceName
-                })
-                .ToList();
+                    return RedirectToAction("Login", "NhaAnPF");
+                }
 
-            return Json(logs);
+                // Kiểm tra cổng hợp lệ
+                var gate = _context.GatePfs.FirstOrDefault(g => g.Id == idgate);
+                if (gate == null)
+                {
+                    return Json(new { message = "Cổng không hợp lệ", data = new List<object>() });
+                }
+
+                DateTime today = DateTime.Today;
+                DateTime now = DateTime.Now;
+                TimeSpan currentTime = now.TimeOfDay;
+
+                // Khai báo biến thời gian bắt đầu / kết thúc
+                TimeSpan startTime = TimeSpan.Zero;
+                TimeSpan endTime = TimeSpan.Zero;
+                string mealName = "";
+                DateTime startDate = today;
+                DateTime endDate = today;
+
+                // Xác định ca ăn hiện tại
+                if (currentTime >= new TimeSpan(5, 0, 0) && currentTime < new TimeSpan(9, 0, 0))
+                {
+                    mealName = "Sáng";
+                    startTime = new TimeSpan(5, 0, 0);
+                    endTime = new TimeSpan(9, 0, 0);
+                }
+                else if (currentTime >= new TimeSpan(11, 0, 0) && currentTime < new TimeSpan(13, 0, 0))
+                {
+                    mealName = "Trưa";
+                    startTime = new TimeSpan(11, 0, 0);
+                    endTime = new TimeSpan(13, 0, 0);
+                }
+                else if (currentTime >= new TimeSpan(16, 30, 0) && currentTime < new TimeSpan(19, 0, 0))
+                {
+                    mealName = "Tối";
+                    startTime = new TimeSpan(16, 30, 0);
+                    endTime = new TimeSpan(19, 0, 0);
+                }
+                else if (currentTime >= new TimeSpan(23, 30, 0) || currentTime < new TimeSpan(1, 0, 0))
+                {
+                    mealName = "Đêm";
+                    startTime = new TimeSpan(23, 30, 0);
+                    endTime = new TimeSpan(1, 0, 0);
+
+                    // Xử lý đặc biệt: ca đêm qua 2 ngày
+                    if (currentTime < new TimeSpan(1, 0, 0))
+                    {
+                        startDate = today.AddDays(-1);
+                        endDate = today;
+                    }
+                    else
+                    {
+                        startDate = today;
+                        endDate = today.AddDays(1);
+                    }
+                }
+                else
+                {
+                    return Json(new { message = "Hiện tại không nằm trong khung giờ ăn", data = new List<object>() });
+                }
+
+                // Lấy dữ liệu log trong khoảng thời gian ca hiện tại
+                var logs = _context.AttLogs
+                    .Where(a => a.DeviceName == gate.GName && a.AuthDateTime.HasValue)
+                    .Where(a =>
+                        // Trường hợp bình thường (không qua ngày)
+                        (startDate == endDate && a.AuthDateTime.Value.Date == today &&
+                         a.AuthDateTime.Value.TimeOfDay >= startTime &&
+                         a.AuthDateTime.Value.TimeOfDay <= endTime)
+                        ||
+                        // Trường hợp ca đêm (qua ngày)
+                        (startDate != endDate &&
+                            ((a.AuthDateTime.Value.Date == startDate && a.AuthDateTime.Value.TimeOfDay >= startTime) ||
+                             (a.AuthDateTime.Value.Date == endDate && a.AuthDateTime.Value.TimeOfDay <= endTime)))
+                    )
+                    .OrderByDescending(a => a.AuthDateTime)
+                    .Select(a => new
+                    {
+                        a.EmployeeId,
+                        a.PersonName,
+                        AuthDateTime = a.AuthDateTime.Value.ToString("yyyy-MM-dd HH:mm:ss"),
+                        a.Direction,
+                        a.DeviceName
+                    })
+                    .ToList();
+
+                // Trả về kết quả
+                return Json(new
+                {
+                    gateId = gate.Id,
+                    gateName = gate.GName,
+                    meal = mealName,
+                    mealTime = $"{startTime:hh\\:mm} - {endTime:hh\\:mm}",
+                    total = logs.Count,
+                    data = logs
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    message = "Đã có lỗi xảy ra khi truy vấn dữ liệu",
+                    error = ex.Message,
+                    data = new List<object>()
+                });
+            }
         }
+
 
         #endregion
     }
