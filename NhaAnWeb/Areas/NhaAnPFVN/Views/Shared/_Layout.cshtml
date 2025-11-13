@@ -1,14 +1,98 @@
 ﻿<!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Time Recode</title>
-    <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=9RltCaVrpXLu&format=png&color=000000">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=9RltCaVrpXLu&format=png&color=000000" />
 </head>
-<body>
-    @RenderBody()
+<body style="margin:0;font-family:Inter,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:row;background:#f7fafc;">
 
-    @RenderSection("Scripts", required: false)
+    <!-- Sidebar -->
+    <nav id="sidebar"
+         style="width:260px;min-width:260px;background:linear-gradient(180deg,#0f172a,#0b1220);color:#fff;display:flex;flex-direction:column;padding:20px 12px;box-sizing:border-box;gap:10px;transition:transform .28s ease,box-shadow .28s ease;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <img src="https://img.icons8.com/?size=100&id=9RltCaVrpXLu&format=png&color=ffffff" alt="logo" style="width:36px;height:36px;" />
+                <div>
+                    <div style="font-weight:700;font-size:16px;">Time Recode</div>
+                    <div style="font-size:12px;opacity:0.7;">Dashboard</div>
+                </div>
+            </div>
+            <button id="sidebarCloseBtn" aria-label="Đóng menu"
+                    style="display:none;background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer;">
+                ✕
+            </button>
+        </div>
+
+        <div style="height:10px;border-bottom:1px solid rgba(255,255,255,0.1);margin:10px 0;"></div>
+
+        <!-- Mục 1 -->
+        <a href="/QLuse" style="text-decoration:none;color:inherit;display:block;padding:10px 14px;border-radius:10px;font-weight:600;transition:background .12s ease;">
+            👥 Quản lý User
+        </a>
+
+        <!-- Mục 2 -->
+        <a href="/Gatechecng" style="text-decoration:none;color:inherit;display:block;padding:10px 14px;border-radius:10px;font-weight:600;transition:background .12s ease;">
+            🛂 Gate Check
+        </a>
+
+        <!-- 🆕 Mục 3: Phần mềm nhà ăn (mở tab mới) -->
+        <a href="/PF/An" target="_blank" style="text-decoration:none;color:inherit;display:block;padding:10px 14px;border-radius:10px;font-weight:600;transition:background .12s ease;">
+            🍱 Phần mềm nhà ăn
+        </a>
+
+        <div style="flex-grow:1"></div>
+        <div style="font-size:12px;opacity:0.7;text-align:center;">© <span id="year"></span> Time Recode</div>
+    </nav>
+
+    <!-- Main content -->
+    <div id="mainArea" style="flex:1;display:flex;flex-direction:column;min-height:100vh;">
+        <header style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(15,23,42,0.05);">
+      
+            <div style="font-size:18px;font-weight:700;color:#0f172a;">Trang Quản Trị</div>
+        </header>
+
+        <main style="flex:1;padding:22px;overflow:auto;">
+            @RenderBody()
+        </main>
+        @RenderSection("Scripts", required: false)
+    </div>
+
+    <script>
+        (function() {
+            var sidebar = document.getElementById('sidebar');
+            var closeBtn = document.getElementById('sidebarCloseBtn');
+            var yearEl = document.getElementById('year');
+            if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+            function setMobile() {
+                sidebar.style.transform = 'translateX(-280px)';
+                sidebar.style.position = 'fixed';
+                sidebar.style.top = '0';
+                sidebar.style.left = '0';
+                sidebar.style.height = '100vh';
+                sidebar.style.zIndex = '9999';
+                closeBtn.style.display = 'inline';
+            }
+            function openSidebar() { sidebar.style.transform = 'translateX(0)'; }
+            function closeSidebar() { sidebar.style.transform = 'translateX(-280px)'; }
+
+            function checkWidth() {
+                if (window.innerWidth < 900) setMobile();
+                else {
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.position = 'relative';
+                    closeBtn.style.display = 'none';
+                }
+            }
+            hamburger.addEventListener('click', function() {
+                if (sidebar.style.transform.includes('0')) closeSidebar(); else openSidebar();
+            });
+            closeBtn.addEventListener('click', closeSidebar);
+            window.addEventListener('resize', checkWidth);
+            checkWidth();
+        })();
+    </script>
 </body>
 </html>

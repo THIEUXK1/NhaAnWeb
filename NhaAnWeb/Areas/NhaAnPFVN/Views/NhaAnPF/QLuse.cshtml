@@ -1,0 +1,104 @@
+﻿@model IEnumerable<NhaAnWeb.Models.NhanVien>
+
+@{
+    ViewData["Title"] = "Quản lý Nhân Viên";
+    Layout = "~/Areas/NhaAnPFVN/Views/Shared/_Layout.cshtml";
+}
+
+<h1 style="text-align:center; font-family:sans-serif; color:#333; margin-bottom:20px;">Quản lý Nhân Viên</h1>
+
+<h3 style="font-family:sans-serif; color:#555; margin-bottom:10px;">Thêm nhân viên mới</h3>
+<form id="formThemNhanVien" style="margin-bottom:20px;">
+    <input type="text" name="Ten" placeholder="Tên" required style="width:95%; padding:8px; margin-bottom:5px; border:1px solid #ccc; border-radius:4px;" />
+    <input type="text" name="TenDangNhap" placeholder="Tên đăng nhập" required style="width:95%; padding:8px; margin-bottom:5px; border:1px solid #ccc; border-radius:4px;" />
+    <input type="text" name="MatKhau" placeholder="Mật khẩu" required style="width:95%; padding:8px; margin-bottom:5px; border:1px solid #ccc; border-radius:4px;" />
+    <input type="number" name="ChucVu" placeholder="Chức vụ" style="width:95%; padding:8px; margin-bottom:5px; border:1px solid #ccc; border-radius:4px;" />
+    <label style="display:block; margin-bottom:10px;">
+        <input type="checkbox" name="TrangThai" /> Hoạt động
+    </label>
+    <button type="submit" style="padding:8px 16px; background-color:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">Thêm</button>
+</form>
+
+<table style="width:100%; border-collapse:collapse; text-align:center; font-family:sans-serif;">
+    <thead>
+        <tr style="background-color:#f2f2f2;">
+            <th style="border:1px solid #ddd; padding:8px;">ID</th>
+            <th style="border:1px solid #ddd; padding:8px;">Tên</th>
+            <th style="border:1px solid #ddd; padding:8px;">Tên đăng nhập</th>
+            <th style="border:1px solid #ddd; padding:8px;">Mật khẩu</th>
+            <th style="border:1px solid #ddd; padding:8px;">Trạng thái</th>
+            <th style="border:1px solid #ddd; padding:8px;">Chức vụ</th>
+            <th style="border:1px solid #ddd; padding:8px;">Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var nv in Model)
+        {
+            <tr data-id="@nv.Id">
+                <td style="border:1px solid #ddd; padding:8px;">@nv.Id</td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="text" value="@nv.Ten" class="inputTen" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;" />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="text" value="@nv.TenDangNhap" class="inputTenDangNhap" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;" />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="text" value="@nv.MatKhau" class="inputMatKhau" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;" />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="checkbox" class="inputTrangThai" @(nv.TrangThai.GetValueOrDefault() ? "checked" : "") />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="number" value="@nv.ChucVu.GetValueOrDefault()" class="inputChucVu" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;" />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <button class="btnSua" style="padding:5px 10px; background-color:#2196F3; color:white; border:none; border-radius:4px; cursor:pointer; margin-right:5px;">Sửa</button>
+                    <button class="btnXoa" style="padding:5px 10px; background-color:#f44336; color:white; border:none; border-radius:4px; cursor:pointer;">Xóa</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    // Thêm nhân viên
+    document.getElementById("formThemNhanVien").addEventListener("submit", function(e){
+        e.preventDefault();
+        let formData = new FormData(this);
+        // ép bool checkbox
+        formData.set("TrangThai", formData.get("TrangThai") === "on" ? "true" : "false");
+        fetch("/QLuse/ThemNhanVien", { method:"POST", body:formData })
+            .then(res => res.ok ? location.reload() : alert("Thêm thất bại!"));
+    });
+
+    // Sửa nhân viên
+    document.querySelectorAll(".btnSua").forEach(btn => {
+        btn.addEventListener("click", function(e){
+            e.preventDefault();
+            let tr = this.closest("tr");
+            let id = tr.getAttribute("data-id");
+            let data = new FormData();
+            data.append("Id", id);
+            data.append("Ten", tr.querySelector(".inputTen").value);
+            data.append("TenDangNhap", tr.querySelector(".inputTenDangNhap").value);
+            data.append("MatKhau", tr.querySelector(".inputMatKhau").value);
+            let trangThai = tr.querySelector(".inputTrangThai").checked ? "true" : "false";
+            data.append("TrangThai", trangThai);
+            data.append("ChucVu", tr.querySelector(".inputChucVu").value);
+            fetch("/QLuse/SuaNhanVien",{method:"POST", body:data})
+                .then(res => res.ok ? location.reload() : alert("Sửa thất bại!"));
+        });
+    });
+
+    // Xóa nhân viên
+    document.querySelectorAll(".btnXoa").forEach(btn => {
+        btn.addEventListener("click", function(e){
+            e.preventDefault();
+            if(!confirm("Bạn có chắc muốn xóa?")) return;
+            let tr = this.closest("tr");
+            let id = tr.getAttribute("data-id");
+            fetch(`/QLuse/XoaNhanVien/${id}`, { method:"POST" })
+                .then(res => res.ok ? location.reload() : alert("Xóa thất bại!"));
+        });
+    });
+</script>

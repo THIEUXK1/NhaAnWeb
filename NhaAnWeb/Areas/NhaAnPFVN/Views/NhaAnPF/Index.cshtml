@@ -1,10 +1,15 @@
 ﻿@{
     int? chucVu = Context.Session.GetInt32("UserChucVu");
     bool showScanUI = chucVu.HasValue && (chucVu.Value == 1 || chucVu.Value == 3);
-    Layout = "~/Areas/NhaAnPFVN/Views/Shared/_Layout.cshtml";
 }
 <!DOCTYPE html>
 <html lang="vi">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Time Recode</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=9RltCaVrpXLu&format=png&color=000000">
+</head>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

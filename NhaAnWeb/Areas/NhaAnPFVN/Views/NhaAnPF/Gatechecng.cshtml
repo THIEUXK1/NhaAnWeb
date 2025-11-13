@@ -1,0 +1,98 @@
+﻿@model IEnumerable<NhaAnWeb.Models.GatePf>
+
+@{
+    ViewData["Title"] = "Gatechecng";
+    Layout = "~/Areas/NhaAnPFVN/Views/Shared/_Layout.cshtml";
+}
+
+<h1 style="text-align:center; font-family:sans-serif; color:#222; margin-bottom:20px;">@ViewData["Title"]</h1>
+
+<!-- Form Thêm Gate -->
+<div style="margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
+    <input type="text" id="newGName" placeholder="Tên Gate" style="width:95%; padding:8px; border:1px solid #ccc; border-radius:5px;" />
+    <textarea id="newDetail" placeholder="Chi tiết" style="width:95%; padding:8px; border:1px solid #ccc; border-radius:5px;"></textarea>
+    <button id="btnAdd" style="width:95%; padding:10px; background-color:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Thêm Gate</button>
+</div>
+
+<!-- Bảng Gate -->
+<table style="width:100%; border-collapse:collapse; font-family:sans-serif; text-align:center;">
+    <thead>
+        <tr style="background-color:#f2f2f2;">
+            <th style="border:1px solid #ddd; padding:10px;">ID</th>
+            <th style="border:1px solid #ddd; padding:10px;">Tên Gate</th>
+            <th style="border:1px solid #ddd; padding:10px;">Chi tiết</th>
+            <th style="border:1px solid #ddd; padding:10px;">Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var gate in Model)
+        {
+            <tr data-id="@gate.Id" style="border:1px solid #ddd;">
+                <td style="border:1px solid #ddd; padding:8px;">@gate.Id</td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <input type="text" class="inputGName" value="@gate.GName" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;" />
+                </td>
+                <td style="border:1px solid #ddd; padding:8px;">
+                    <textarea class="inputDetail" style="width:95%; padding:5px; border:1px solid #ccc; border-radius:4px;">@gate.Detail</textarea>
+                </td>
+                <td style="border:1px solid #ddd; padding:8px; display:flex; gap:5px; justify-content:center;">
+                    <button class="btnEdit" style="padding:5px 10px; background-color:#2196F3; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Sửa</button>
+                    <button class="btnDelete" style="padding:5px 10px; background-color:#f44336; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Xóa</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    // Thêm Gate
+    document.getElementById('btnAdd').addEventListener('click', function() {
+        const GName = document.getElementById('newGName').value.trim();
+        const Detail = document.getElementById('newDetail').value.trim();
+        if(!GName) { alert("Tên Gate không được bỏ trống!"); return; }
+
+        const formData = new FormData();
+        formData.append("GName", GName);
+        formData.append("Detail", Detail);
+
+        fetch('/Gate/Create', { method:'POST', body:formData })
+            .then(res => {
+                if(res.ok) location.reload(); 
+                else alert("Thêm thất bại!");
+            });
+    });
+
+    // Gắn sự kiện Sửa/Xóa
+    document.querySelectorAll('.btnEdit').forEach(btn => {
+        btn.onclick = function() {
+            const tr = this.closest('tr');
+            const id = tr.dataset.id;
+            const GName = tr.querySelector('.inputGName').value;
+            const Detail = tr.querySelector('.inputDetail').value;
+
+            const formData = new FormData();
+            formData.append("Id", id);
+            formData.append("GName", GName);
+            formData.append("Detail", Detail);
+
+            fetch('/Gate/Edit', { method:'POST', body:formData })
+                .then(res => {
+                    if(res.ok) location.reload();
+                    else alert("Sửa thất bại!");
+                });
+        };
+    });
+
+    document.querySelectorAll('.btnDelete').forEach(btn => {
+        btn.onclick = function() {
+            if(!confirm("Bạn có chắc muốn xóa?")) return;
+            const id = this.closest('tr').dataset.id;
+
+            fetch(`/Gate/Delete/${id}`, { method:'GET' })
+                .then(res => {
+                    if(res.ok) location.reload();
+                    else alert("Xóa thất bại!");
+                });
+        };
+    });
+</script>

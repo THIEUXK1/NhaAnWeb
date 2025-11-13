@@ -496,5 +496,132 @@ namespace KhoEST.Areas.NhaAnPFVN.Controllers
         }
 
         #endregion
+
+        #region Đăng nhập quản lý
+        [HttpGet("/DangNhap")]
+        public IActionResult DangNhap()
+        {
+            return View();
+        }
+
+        [HttpPost("/DangNhap")]
+        public IActionResult DangNhap(string username, string password)
+        {
+            // Demo đăng nhập (bạn có thể thay bằng kiểm tra DB)
+            if (username == "admin" && password == "123")
+            {
+                HttpContext.Session.SetString("User", username);
+                return RedirectToAction("QLuse");
+            }
+            ViewBag.Error = "Sai tài khoản hoặc mật khẩu!";
+            return View();
+        }
+        #endregion
+
+        #region Quản lý tài khoản
+        [HttpGet("/QLuse")]
+        public IActionResult QLuse()
+        {
+            if (HttpContext.Session.GetString("User") == null)
+                return RedirectToAction("DangNhap");
+
+            // Lấy danh sách NhanVien
+            var danhSachNhanVien = _context.NhanViens.ToList();
+
+            // Đẩy ra View
+            return View(danhSachNhanVien);
+        }
+        [HttpPost("/QLuse/ThemNhanVien")]
+        public IActionResult Them(NhanVien nv)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.NhanViens.Add(nv);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("QLuse");
+        }
+        [HttpPost("/QLuse/SuaNhanVien")]
+        public IActionResult Sua(NhanVien nv)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.NhanViens.Update(nv);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("QLuse");
+        }
+        [HttpPost("/QLuse/XoaNhanVien/{id}")]
+        public IActionResult Xoa(int id)
+        {
+            var nv = _context.NhanViens.Find(id);
+            if (nv != null)
+            {
+                _context.NhanViens.Remove(nv);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("QLuse");
+        }
+        #endregion
+
+        #region Quản lý cổng
+        // Hiển thị danh sách Gate
+        [HttpGet("/Gatechecng")]
+        public IActionResult Gatechecng()
+        {
+            // Kiểm tra session User
+            if (HttpContext.Session.GetString("User") == null)
+                return RedirectToAction("DangNhap");
+
+            // Lấy danh sách đồng bộ
+            var gates = _context.GatePfs.ToList();
+            return View(gates);
+        }
+
+        // Tạo mới Gate
+        [HttpPost("/Gate/Create")]
+        public IActionResult Create(GatePf gate)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.GatePfs.Add(gate);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("Gatechecng");
+        }
+
+        // Sửa Gate
+        [HttpPost("/Gate/Edit")]
+        public IActionResult Edit(GatePf gate)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.GatePfs.Update(gate);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("Gatechecng");
+        }
+
+        // Xóa Gate
+        [HttpGet("/Gate/Delete/{id}")]
+        public IActionResult Delete(int id)
+        {
+            var gate = _context.GatePfs.Find(id);
+            if (gate != null)
+            {
+                _context.GatePfs.Remove(gate);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("Gatechecng");
+        }
+        #endregion
+
+        [HttpGet("/DangXuat")]
+        public IActionResult DangXuat()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("DangNhap");
+        }
     }
 }
+
